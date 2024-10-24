@@ -1,88 +1,3 @@
---[[
-
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-========                                    .-----.          ========
-========         .----------------------.   | === |          ========
-========         |.-""""""""""""""""""-.|   |-----|          ========
-========         ||                    ||   | === |          ========
-========         ||   KICKSTART.NVIM   ||   |-----|          ========
-========         ||                    ||   | === |          ========
-========         ||                    ||   |-----|          ========
-========         ||:Tutor              ||   |:::::|          ========
-========         |'-..................-'|   |____o|          ========
-========         `"")----------------(""`   ___________      ========
-========        /::::::::::|  |::::::::::\  \ no mouse \     ========
-========       /:::========|  |==hjkl==:::\  \ required \    ========
-========      '""""""""""""'  '""""""""""""'  '""""""""""'   ========
-========                                                     ========
-=====================================================================
-=====================================================================
-
-What is Kickstart?
-
-  Kickstart.nvim is *not* a distribution.
-
-  Kickstart.nvim is a starting point for your own configuration.
-    The goal is that you can read every line of code, top-to-bottom, understand
-    what your configuration is doing, and modify it to suit your needs.
-
-    Once you've done that, you can start exploring, configuring and tinkering to
-    make Neovim your own! That might mean leaving Kickstart just the way it is for a while
-    or immediately breaking it into modular pieces. It's up to you!
-
-    If you don't know anything about Lua, I recommend taking some time to read through
-    a guide. One possible example which will only take 10-15 minutes:
-      - https://learnxinyminutes.com/docs/lua/
-
-    After understanding a bit more about Lua, you can use `:help lua-guide` as a
-    reference for how Neovim integrates Lua.
-    - :help lua-guide
-    - (or HTML version): https://neovim.io/doc/user/lua-guide.html
-
-Kickstart Guide:
-
-  TODO: The very first thing you should do is to run the command `:Tutor` in Neovim.
-
-    If you don't know what this means, type the following:
-      - <escape key>
-      - :
-      - Tutor
-      - <enter key>
-
-    (If you already know the Neovim basics, you can skip this step.)
-
-  Once you've completed that, you can continue working through **AND READING** the rest
-  of the kickstart init.lua.
-
-  Next, run AND READ `:help`.
-    This will open up a help window with some basic information
-    about reading, navigating and searching the builtin help documentation.
-
-    This should be the first place you go to look when you're stuck or confused
-    with something. It's one of my favorite Neovim features.
-
-    MOST IMPORTANTLY, we provide a keymap "<space>sh" to [s]earch the [h]elp documentation,
-    which is very useful when you're not exactly sure of what you're looking for.
-
-  I have left several `:help X` comments throughout the init.lua
-    These are hints about where to find more information about the relevant settings,
-    plugins or Neovim features used in Kickstart.
-
-   NOTE: Look for lines like this
-
-    Throughout the file. These are for you, the reader, to help you understand what is happening.
-    Feel free to delete them once you know what you're doing, but they should serve as a guide
-    for when you are first encountering a few different constructs in your Neovim config.
-
-If you experience any errors while trying to install kickstart, run `:checkhealth` for more info.
-
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now! :)
---]]
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -161,7 +76,6 @@ vim.opt.inccommand = 'split'
 -- Show which line your cursor is on
 vim.opt.cursorline = true
 vim.opt.cursorcolumn = true
--- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
 -- [[ Basic Keymaps ]]
@@ -171,6 +85,9 @@ vim.opt.scrolloff = 10
 vim.opt.incsearch = true
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+vim.api.nvim_set_keymap('n', '<S-Down>', '', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<S-Up>', '', { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
@@ -256,6 +173,181 @@ require('lazy').setup({
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+
+      harpoon:setup {
+        settings = {
+          save_on_toggle = true, -- Save state on window toggle
+        },
+      }
+
+      -- Telescope Config
+      local conf = require('telescope.config').values
+      local pickers = require 'telescope.pickers'
+      local themes = require 'telescope.themes'
+      local finders = require 'telescope.finders'
+      local actions = require 'telescope.actions'
+      local action_state = require 'telescope.actions.state'
+
+      local function generate_new_finder(harpoon_files)
+        local files = {}
+        for i, item in ipairs(harpoon_files.items) do
+          table.insert(files, i .. '. ' .. item.value)
+        end
+
+        return finders.new_table {
+          results = files,
+        }
+      end
+
+      -- move_mark_up will move the mark up in the list, refresh the picker's result list and move the selection accordingly
+      local function move_mark_up(prompt_bufnr, harpoon_files)
+        local selection = action_state.get_selected_entry()
+        if not selection then
+          return
+        end
+        if selection.index == 1 then
+          return
+        end
+
+        local mark = harpoon_files.items[selection.index]
+
+        table.remove(harpoon_files.items, selection.index)
+        table.insert(harpoon_files.items, selection.index - 1, mark)
+
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        current_picker:refresh(generate_new_finder(harpoon_files), {})
+
+        -- yes defer_fn is an awful solution. If you find a better one, please let the world know.
+        -- it's used here because we need to wait for the picker to refresh before we can set the selection
+        -- actions.move_selection_previous() doesn't work here because the selection gets reset to 0 on every refresh.
+        vim.defer_fn(function()
+          -- don't even bother finding out why this is -2 here. (i don't know either)
+          current_picker:set_selection(selection.index - 2)
+        end, 2) -- 2ms was the minimum delay I could find that worked without glitching out the picker
+      end
+
+      -- move_mark_down will move the mark down in the list, refresh the picker's result list and move the selection accordingly
+      local function move_mark_down(prompt_bufnr, harpoon_files)
+        local selection = action_state.get_selected_entry()
+        if not selection then
+          return
+        end
+
+        local length = harpoon:list():length()
+        if selection.index == length then
+          return
+        end
+
+        local mark = harpoon_files.items[selection.index]
+
+        table.remove(harpoon_files.items, selection.index)
+        table.insert(harpoon_files.items, selection.index + 1, mark)
+
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        current_picker:refresh(generate_new_finder(harpoon_files), {})
+
+        -- yes defer_fn is an awful solution. If you find a better one, please let the world know.
+        -- it's used here because we need to wait for the picker to refresh before we can set the selection
+        -- actions.move_selection_next() doesn't work here because the selection gets reset to 0 on every refresh.
+        vim.defer_fn(function()
+          current_picker:set_selection(selection.index)
+        end, 2) -- 2ms was the minimum delay I could find that worked without glitching out the picker
+      end
+
+      local function toggle_telescope(harpoon_files)
+        pickers
+          .new(
+            themes.get_dropdown {
+              --TODO: make previewer work.
+              previewer = false,
+            },
+            {
+              prompt_title = 'Harpoon',
+              finder = generate_new_finder(harpoon_files),
+              previewer = conf.file_previewer {},
+              sorter = conf.generic_sorter {},
+              -- Initial mode, change this to your liking. Normal mode is better for navigating with j/k
+              initial_mode = 'normal',
+              -- Make telescope select buffer from harpoon list
+              attach_mappings = function(_, map)
+                actions.select_default:replace(function(prompt_bufnr)
+                  local curr_entry = action_state.get_selected_entry()
+                  if not curr_entry then
+                    return
+                  end
+                  actions.close(prompt_bufnr)
+
+                  harpoon:list():select(curr_entry.index)
+                end)
+                -- Delete entries in insert mode from harpoon list with <C-d>
+                -- Change the keybinding to your liking
+                map({ 'n', 'i' }, '<C-d>', function(prompt_bufnr)
+                  local curr_picker = action_state.get_current_picker(prompt_bufnr)
+
+                  curr_picker:delete_selection(function(selection)
+                    harpoon:list():remove_at(selection.index)
+                  end)
+                end)
+                -- Move entries up and down with <C-j> and <C-k>
+                -- Change the keybinding to your liking
+                map({ 'n', 'i' }, '<C-j>', function(prompt_bufnr)
+                  move_mark_down(prompt_bufnr, harpoon_files)
+                end)
+                map({ 'n', 'i' }, '<C-k>', function(prompt_bufnr)
+                  move_mark_up(prompt_bufnr, harpoon_files)
+                end)
+
+                return true
+              end,
+            }
+          )
+          :find()
+      end
+
+      -- Telescope Harpoon List
+      vim.keymap.set('n', '<leader>h', function()
+        toggle_telescope(harpoon:list())
+      end, { desc = 'List Harpoon Files (Telescope)' })
+
+      -- Append to Harpoon List
+      vim.keymap.set('n', '<leader>af', function()
+        harpoon:list():add()
+      end, { desc = 'Append File to Harpoon' })
+
+      -- Display Harpoon List
+      -- vim.keymap.set('n', '<leader>', function()
+      --   harpoon.ui:toggle_quick_menu(harpoon:list())
+      -- end, { desc = 'List Harpoon Files' })
+
+      -- Go to Previous Harpoon File
+      vim.keymap.set('n', '<leader>j', function()
+        harpoon:list():prev { ui_nav_wrap = true }
+      end, { desc = 'Previous Harpoon File' })
+
+      -- Go to Next Harpoon File
+      vim.keymap.set('n', '<leader>k', function()
+        harpoon:list():next { ui_nav_wrap = true }
+      end, { desc = 'Next Harpoon File' })
+
+      -- Clear harpoon List
+      vim.keymap.set('n', '<leader>ac', function()
+        harpoon:list():clear()
+      end, { desc = 'Clear Harpoon List' })
+
+      -- Select Harpoon File from List (1-5)
+      for i = 1, 5 do
+        vim.keymap.set('n', string.format('<C-%s>', i), function()
+          harpoon:list():select(i)
+        end)
+      end
+    end,
+  },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -303,12 +395,8 @@ require('lazy').setup({
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
     end,
   },
 
@@ -365,6 +453,7 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
@@ -789,10 +878,13 @@ require('lazy').setup({
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     opts = {
+      transparent = true,
       styles = {
         keywords = { italic = false },
         functions = { italic = false },
         variables = { italic = false },
+        sidebars = 'transparent',
+        floats = 'transparent',
       },
     },
     init = function()
