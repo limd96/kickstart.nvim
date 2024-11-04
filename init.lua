@@ -88,6 +88,10 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 vim.api.nvim_set_keymap('n', '<S-Down>', '', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<S-Up>', '', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('i', '<S-Down>', '', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('i', '<S-Up>', '', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<S-Down>', '', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<S-Up>', '', { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
@@ -517,7 +521,7 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
+      { 'williamboman/mason.nvim', config = true, opts = { ensure_installed = { 'graphql-language-service-cli' } } }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -666,9 +670,9 @@ require('lazy').setup({
         bufls = {},
         golangci_lint_ls = {},
         graphql = {
-          root_dir = function(fname)
-            return require('lspconfig').util.root_pattern('.graphqlrc', '.graphqlconfig', 'package.json', '.git')(fname) or vim.fn.getcwd()
-          end,
+          root_dir = require('lspconfig').util.root_pattern '.graphqlrc.yaml',
+          capabilities = capabilities,
+          filetypes = { 'graphql', 'go', 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
         },
         jdtls = {},
         jsonls = {},
@@ -965,7 +969,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'graphql', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
