@@ -3,7 +3,10 @@
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-
+vim.opt.clipboard = 'unnamedplus'
+vim.keymap.set('n', '<leader>fp', function()
+  print(vim.fn.expand '%:p')
+end)
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -393,12 +396,21 @@ require('lazy').setup({
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '', group = '[W]orkspace' },
+        { '', desc = '<leader>w_', hidden = true },
+
+        { '', group = '[D]ocument' },
+        { '', desc = '<leader>d_', hidden = true },
+
+        { '', group = '[R]ename' },
+        { '', desc = '<leader>r_', hidden = true },
+
+        { '', group = '[S]earch' },
+        { '', desc = '<leader>s_', hidden = true },
+
+        { '', group = '[C]ode' },
+        { '', desc = '<leader>c_', hidden = true },
       }
       -- visual mode
     end,
@@ -666,8 +678,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         gopls = {},
-        buf = {},
-        bufls = {},
+        buf_ls = {},
         golangci_lint_ls = {},
         graphql = {
           root_dir = require('lspconfig').util.root_pattern '.graphqlrc.yaml',
@@ -676,7 +687,7 @@ require('lazy').setup({
         },
         jdtls = {},
         jsonls = {},
-        tsserver = {},
+        ts_ls = {},
         --
 
         lua_ls = {
