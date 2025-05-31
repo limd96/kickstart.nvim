@@ -104,7 +104,15 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 
 -- global
 vim.api.nvim_set_keymap('n', '<leader>t', ':NvimTreeToggle<cr>', { silent = true, noremap = true })
-
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'NvimTree',
+  callback = function()
+    -- Disable Ctrl+o and Ctrl+i in nvim-tree buffers
+    local opts = { noremap = true, silent = true }
+    vim.api.nvim_buf_set_keymap(0, 'n', '<C-o>', '<Nop>', opts)
+    vim.api.nvim_buf_set_keymap(0, 'n', '<C-i>', '<Nop>', opts)
+  end,
+})
 -- Tab keymaps
 vim.api.nvim_set_keymap('n', 'tt', ':tabnew | e#<CR>', { noremap = true, silent = true })
 
