@@ -28,15 +28,14 @@ theme.colors = {
 theme.setup = function()
   local c = theme.colors
   vim.cmd 'highlight clear'
-  if vim.fn.exists 'syntax_on' then
-    vim.cmd 'syntax reset'
-  end
+  if vim.fn.exists 'syntax_on' then vim.cmd 'syntax reset' end
   vim.o.background = 'dark'
   vim.g.colors_name = 'constant_luma'
 
   -- UI
   vim.api.nvim_set_hl(0, 'Normal', { fg = c.fg, bg = c.bg })
-  vim.api.nvim_set_hl(0, 'CursorLine', { bg = '#111111' })
+  vim.api.nvim_set_hl(0, 'CursorLine', { bg = '#fcd277' })
+  vim.api.nvim_set_hl(0, 'CursorColumn', { bg = '#fcd277' })
   vim.api.nvim_set_hl(0, 'Visual', { bg = c.selection_bg, fg = c.selection_fg })
   vim.api.nvim_set_hl(0, 'LineNr', { fg = c.br_black })
   vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = c.white })
