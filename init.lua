@@ -1,6 +1,7 @@
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+vim.opt.list = false
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 vim.opt.clipboard = 'unnamedplus'
@@ -79,13 +80,6 @@ vim.o.splitbelow = true
 --  See `:help 'list'`
 --  and `:help 'listchars'`
 --
---  Notice listchars is set using `vim.opt` instead of `vim.o`.
---  It is very similar to `vim.o` but offers an interface for conveniently interacting with tables.
---   See `:help lua-options`
---   and `:help lua-guide-options`
-vim.o.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
-
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
 
