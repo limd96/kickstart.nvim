@@ -995,7 +995,22 @@ require('lazy').setup({
     end,
   },
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      signs = false,
+      colors = {
+        error = { '#ff5555' }, -- FIXME
+        warning = { '#f7c077' }, -- WARNING
+        info = { '#fdffc4' }, -- TODO
+        hint = { '#c4e8ff' }, -- HINT
+        default = { '#bd93f9' },
+        test = { '#ff79c6' },
+      },
+    },
+  },
   {
     'nvim-lualine/lualine.nvim',
   },
